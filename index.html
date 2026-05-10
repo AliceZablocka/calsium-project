@@ -26,7 +26,7 @@
 
 <script type="module">
 
-Cesium.Ion.defaultAccessToken = "YOUR_TOKEN_HERE";
+Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2MGRhMjkwNC1lMWMzLTQ1ZTEtOTdjNC0xZGUwMWY1Mzg5ZmYiLCJpZCI6NDI1ODUzLCJpYXQiOjE3Nzc1NjY2MTJ9.FoUfjV9bbzXG2v3SeWeBnlpZn8p-VkpOrTKAh_qnACk";
 
 const viewer = new Cesium.Viewer("cesiumContainer", {
     terrain: Cesium.Terrain.fromWorldTerrain(),
@@ -48,12 +48,10 @@ const tileset =
 
 viewer.scene.primitives.add(tileset);
 
-
 /* TODO: REAL-WORLD POSITION */
-
-const longitude = 0;
-const latitude = 0;
-const height = 0;
+const longitude = 18.48606140571406;
+const latitude = 54.37842878700853;
+const height = 5.0;
 
 const position = Cesium.Cartesian3.fromDegrees(
     longitude,
