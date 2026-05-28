@@ -1,92 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
-    <meta charset="utf-8">
-
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Cesium.js"></script>
-
-    <link
-      href="https://cesium.com/downloads/cesiumjs/releases/1.120/Build/Cesium/Widgets/widgets.css"
-      rel="stylesheet"
-    />
-
-    <style>
-        html, body, #cesiumContainer {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
+  <meta charset="utf-8">
+  <title>Mermaid statue on Wielkopolska street</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden;
+    }
+    #menuContainer {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(42, 42, 42, 0.8);
+      padding: 10px;
+      border-radius: 4px;
+      font-family: sans-serif;
+      color: white;
+      z-index: 1000;
+    }
+    #toggleBuildings {
+      cursor: pointer;
+      padding: 6px 12px;
+      background: #008CBA;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    #toggleBuildings:hover {
+      background: #007B9A;
+    }
+  </style>
 </head>
-
 <body>
 
-<div id="cesiumContainer"></div>
+  <div id="menuContainer">
+    <button id="toggleBuildings">Ukryj budynki Google 3D</button>
+  </div>
 
-<script type="module">
+  <div id="cesiumContainer"></div>
 
-Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI2MGRhMjkwNC1lMWMzLTQ1ZTEtOTdjNC0xZGUwMWY1Mzg5ZmYiLCJpZCI6NDI1ODUzLCJpYXQiOjE3Nzc1NjY2MTJ9.FoUfjV9bbzXG2v3SeWeBnlpZn8p-VkpOrTKAh_qnACk";
+  <script>
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI1ZjA5MzQ4Ni03MWJhLTQzMWQtYTNmNy1lZTYzMDZlYmM5MTEiLCJpZCI6NDM1ODc1LCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3Nzk2NDgzNzF9.boLBvFVeDG-f5hDXWlkFNp0h6vK75GeO1S1qljLpGnU';
 
-const viewer = new Cesium.Viewer("cesiumContainer", {
-    terrain: Cesium.Terrain.fromWorldTerrain(),
-    shadows: true
-});
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      shadows: true,
+      terrainShadows: Cesium.ShadowMode.ENABLED,
+      baseLayerPicker: false
+    });
 
-viewer.scene.globe.enableLighting = true;
-viewer.scene.highDynamicRange = true;
+    viewer.clock.currentTime = Cesium.JulianDate.fromIso8601("2026-05-24T13:11:00Z");
 
-viewer.clock.currentTime =
-    Cesium.JulianDate.fromDate(
-        new Date("2025-05-10T15:00:00")
-    );
+    let googleTileset;
 
-const tileset =
-    await Cesium.Cesium3DTileset.fromIonAssetId(
-        4747128
-    );
+    async function loadGoogle3DTiles() {
+        try {
+            googleTileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207); 
+            viewer.scene.primitives.add(googleTileset);
+        } catch (error) {
+            console.error("Błąd ładowania budynków Google 3D:", error);
+        }
+    }
+    loadGoogle3DTiles();
 
-viewer.scene.primitives.add(tileset);
+    //coordinates and paramiters of the statue
+    const longitude = 18.538774; 
+    const latitude = 54.483220;  
+    const heightWithBuildings = 63; 
+    const heightWithoutBuildings = 3; 
 
-/* REAL-WORLD POSITION */
-const longitude = 18.48606140571406;
-const latitude = 54.37842878700853;
-const height = 5.0;
+    //orientation and rotation of the statue
+    const heading = Cesium.Math.toRadians(-90); 
+    const pitch = 0.2;
+    const roll = -0.3;
+    const hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 
-const position = Cesium.Cartesian3.fromDegrees(
-    longitude,
-    latitude,
-    height
-);
-
-const matrix =
-    Cesium.Transforms.eastNorthUpToFixedFrame(
-        position
-    );
-
-tileset.modelMatrix = matrix;
-
-
-/* OPTIONAL ROTATION */
-
-const heading = Cesium.Math.toRadians(90);
-
-const hpr = new Cesium.HeadingPitchRoll(
-    heading,
-    0,
-    0
-);
-
-tileset.modelMatrix =
-    Cesium.Transforms.headingPitchRollToFixedFrame(
-        position,
-        hpr
-    );
+    //starting positions
+    let currentPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, heightWithBuildings);
+    let currentOrientation = Cesium.Transforms.headingPitchRollQuaternion(currentPosition, hpr);
 
 
-viewer.zoomTo(tileset);
+    const entity = viewer.entities.add({
+      name: 'Syrenka Plac Górnośląski',
+      position: currentPosition,
+      orientation: currentOrientation,
+      model: {
+          uri: 'syrenkaV2.glb', 
+          scale: 1, 
+          minimumPixelSize: 0,
+          maximumScale: 1,
+          shadows: Cesium.ShadowMode.ENABLED 
+      }
+    });
 
-</script>
 
+    //function that set the camera view based on current height if the statue
+    function setCameraPosition(targetHeight) {
+        viewer.camera.setView({
+            destination: Cesium.Cartesian3.fromDegrees(
+                18.538735,        
+                54.483270, 
+                targetHeight + 3.2 
+            ),
+            orientation: {
+                heading: Cesium.Math.toRadians(160),   
+                pitch: Cesium.Math.toRadians(-15)   //we look from an angle
+            }
+        });
+    }
+
+    setCameraPosition(heightWithBuildings);
+
+    //function to toggle a button for changing the modes
+    document.getElementById('toggleBuildings').addEventListener('click', function() {
+        if (googleTileset) {
+            googleTileset.show = !googleTileset.show;
+            
+            if (googleTileset.show) {
+                this.innerText = "Ukryj budynki Google 3D";
+                this.style.background = "#008CBA";
+                
+                // changing the position, focused on height parameter
+                currentPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, heightWithBuildings);
+                currentOrientation = Cesium.Transforms.headingPitchRollQuaternion(currentPosition, hpr);
+                entity.position = currentPosition;
+                entity.orientation = currentOrientation;
+                
+                setCameraPosition(heightWithBuildings);
+            } else {
+                this.innerText = "Pokaż budynki Google 3D";
+                this.style.background = "#4CAF50";
+                                currentPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, heightWithoutBuildings);
+                currentOrientation = Cesium.Transforms.headingPitchRollQuaternion(currentPosition, hpr);
+                entity.position = currentPosition;
+                entity.orientation = currentOrientation;
+                
+                setCameraPosition(heightWithoutBuildings);
+            }
+        }
+    });
+  </script>
 </body>
 </html>
